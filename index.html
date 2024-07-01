@@ -3,6 +3,11 @@
 	<head>
 		<meta name="viewport" content="width=device-width,initial-scale=1.0" />
 		<title>Socket.IO chat</title>
+		<link
+			rel="stylesheet"
+			type="text/css"
+			href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+
 		<style>
 			body {
 				margin: 0;
@@ -64,6 +69,10 @@
 		</form>
 
 		<script src="/socket.io/socket.io.js"></script>
+		<script
+			type="text/javascript"
+			src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
 		<script>
 			let counter = 0;
 
@@ -108,6 +117,14 @@
 				messages.appendChild(item);
 				window.scrollTo(0, document.body.scrollHeight);
 				socket.auth.serverOffset = serverOffset;
+			});
+
+			socket.on('user connected', (msg) => {
+				Toastify({
+					text: msg,
+					duration: 3000,
+					stopOnFocus: false
+				}).showToast();
 			});
 		</script>
 	</body>

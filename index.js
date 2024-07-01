@@ -12,14 +12,14 @@ import { createAdapter, setupPrimary } from '@socket.io/cluster-adapter';
 const PORT = process.env.PORT || 3001;
 
 // Challenges for Jordan
-// - Broadcast a message to connected users when someone connects or disconnects.
+// - Broadcast a message to connected users when someone connects or disconnects. DONE
 // - Add support for nicknames.
 // - Don’t send the same message to the user that sent it. Instead, append the message directly as soon as they press enter.
 // - Add “{user} is typing” functionality.
 // - Show who’s online.
 // - Add private messaging.
 
-if (cluster.isPrimary) {
+if (false) {
 	const numCPUs = availableParallelism();
 
 	for (let i = 0; i < numCPUs; i++) {
@@ -46,8 +46,8 @@ if (cluster.isPrimary) {
 	const app = express();
 	const server = createServer(app);
 	const io = new Server(server, {
-		connectionStateRecovery: {},
-		adapter: createAdapter()
+		connectionStateRecovery: {}
+		// adapter: createAdapter()
 	});
 
 	const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -57,7 +57,7 @@ if (cluster.isPrimary) {
 	});
 
 	io.on('connection', async (socket) => {
-		console.log('a user connected');
+		socket.broadcast.emit('user connected', 'A new user has connected.');
 
 		socket.on('chat message', async (msg, clientOffset, callback) => {
 			let result;
