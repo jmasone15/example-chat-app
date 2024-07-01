@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3001;
 
 // Challenges for Jordan
 // - Broadcast a message to connected users when someone connects or disconnects. DONE
-// - Add support for nicknames.
+// - Add support for nicknames. DONE
 // - Don’t send the same message to the user that sent it. Instead, append the message directly as soon as they press enter.
 // - Add “{user} is typing” functionality.
 // - Show who’s online.
@@ -57,7 +57,9 @@ if (false) {
 	});
 
 	io.on('connection', async (socket) => {
-		socket.broadcast.emit('user connected', 'A new user has connected.');
+		socket.once('self', (msg) => {
+			socket.broadcast.emit('user connected', `${msg} has joined the chat!`);
+		});
 
 		socket.on('chat message', async (msg, clientOffset, callback) => {
 			let result;
