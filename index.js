@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3001;
 // Challenges for Jordan
 // - Broadcast a message to connected users when someone connects or disconnects. DONE
 // - Add support for nicknames. DONE
-// - Don’t send the same message to the user that sent it. Instead, append the message directly as soon as they press enter.
+// - Don’t send the same message to the user that sent it. Instead, append the message directly as soon as they press enter. DONE
 // - Add “{user} is typing” functionality.
 // - Show who’s online.
 // - Add private messaging.
@@ -57,34 +57,11 @@ if (false) {
 	});
 
 	io.on('connection', async (socket) => {
-		socket.once('self', (msg) => {
+		console.log('user connected');
+
+		socket.once('self', async (msg) => {
 			socket.broadcast.emit('user connected', `${msg} has joined the chat!`);
-		});
 
-		socket.on('chat message', async (msg, clientOffset, callback) => {
-			let result;
-
-			try {
-				result = await db.run(
-					'INSERT INTO messages (content, client_offset) VALUES (?, ?)',
-					msg,
-					clientOffset
-				);
-			} catch (e) {
-				if (e.errno === 19) {
-					callback();
-				} else {
-					console.error(e);
-				}
-				return;
-			}
-
-			io.emit('chat message', msg, result.lastID);
-
-			callback();
-		});
-
-		if (!socket.recovered) {
 			try {
 				await db.each(
 					'SELECT id, content FROM messages WHERE id > ?',
@@ -97,7 +74,26 @@ if (false) {
 				console.error(e);
 				return;
 			}
-		}
+		});
+
+		socket.on('chat message', async (msg, clientOffset) => {
+			let result;
+
+			try {
+				result = await db.run(
+					'INSERT INTO messages (content, client_offset) VALUES (?, ?)',
+					msg,
+					clientOffset
+				);
+			} catch (e) {
+				if (e.errno !== 19) {
+					console.error(e);
+				}
+				return;
+			}
+
+			socket.broadcast.emit('chat message', msg, result.lastID);
+		});
 
 		socket.on('disconnect', () => {
 			console.log('user disconnected');
