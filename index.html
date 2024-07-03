@@ -89,6 +89,21 @@
 			border: 1px solid #888;
 			width: 80%;
 		}
+
+		.nav {
+			display: flex;
+			background-color: #cac8c8;
+			padding: 10px;
+			align-items: center;
+		}
+
+		#self {
+			flex-grow: 3;
+		}
+
+		#online_users {
+			flex-grow: 1;
+		}
 	</style>
 </head>
 
@@ -100,6 +115,11 @@
 			<button id="nick-btn">Submit</button>
 		</div>
 	</div>
+	<nav class="nav">
+		<p id="self"></p>
+		<select name="online_users" id="online_users">
+		</select>
+	</nav>
 	<ul id="messages"></ul>
 	<form id="form" action="">
 		<input id="input" autocomplete="off" /><button>Send</button>
@@ -123,6 +143,8 @@
 		const modal = document.getElementById('modal');
 		const nicknameInput = document.getElementById('nickname');
 		const nicknameButton = document.getElementById('nick-btn');
+		const nicknameDisplay = document.getElementById('self');
+		const onlineUsers = document.getElementById('online_users');
 
 		// Socket Variable
 		const socket = io({
@@ -166,6 +188,11 @@
 			const existingToast = typingToastObjects.filter((x) => x.nickname === nickname)[0];
 			existingToast.toast.hideToast();
 		});
+		socket.on('online users', (users) => {
+			if (users.length > 0) {
+				populateUsers(users)
+			}
+		});
 
 
 		// Event Listeners
@@ -199,6 +226,7 @@
 				localStorage.setItem('nickname', nicknameInput.value);
 				nickname = nicknameInput.value;
 				modal.setAttribute('class', 'display-none');
+				nicknameDisplay.textContent = nickname;
 				socket.emit('self', nickname);
 			}
 		});
@@ -219,11 +247,24 @@
 				window.scrollTo(0, document.body.scrollHeight);
 			}
 		}
+		const populateUsers = (users) => {
+
+			while (onlineUsers.firstChild) {
+				onlineUsers.firstChild.remove();
+			}
+
+			for (let i = 0; i < users.length; i++) {
+				const newOption = document.createElement('option');
+				newOption.textContent = users[i];
+				onlineUsers.appendChild(newOption)
+			}
+		}
 
 
 		// On Load
 		if (nickname) {
 			modal.setAttribute('class', 'display-none');
+			nicknameDisplay.textContent = nickname;
 			socket.emit('self', nickname);
 		}
 

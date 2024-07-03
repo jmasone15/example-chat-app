@@ -15,9 +15,8 @@ const PORT = process.env.PORT || 3001;
 // - Broadcast a message to connected users when someone connects or disconnects. DONE
 // - Add support for nicknames. DONE
 // - Don’t send the same message to the user that sent it. Instead, append the message directly as soon as they press enter. DONE
-// - Add “{user} is typing” functionality.
-// - Show who’s online.
-// - Add private messaging.
+// - Add “{user} is typing” functionality. DONE
+// - Show who’s online. DONE
 // - Deploy to Vercel
 
 if (cluster.isPrimary) {
@@ -59,7 +58,17 @@ if (cluster.isPrimary) {
 
 	io.on('connection', async (socket) => {
 		socket.once('self', async (msg) => {
+			if (io.onlineUsers) {
+				io.onlineUsers.push(msg);
+			} else {
+				io.onlineUsers = [msg];
+			}
+
+			socket.client.user_nickname = msg;
+
 			socket.broadcast.emit('user connected', `${msg} has joined the chat!`);
+			socket.emit('online users', io.onlineUsers);
+
 			console.log(`${msg} connected`);
 
 			try {
@@ -103,7 +112,14 @@ if (cluster.isPrimary) {
 		});
 
 		socket.on('disconnect', () => {
-			console.log('user disconnected');
+			const nickname = socket.client.user_nickname || 'user';
+			console.log(`${nickname} disconnected`);
+
+			if (nickname !== 'user') {
+				const userIndex = io.onlineUsers.indexOf(nickname);
+				io.onlineUsers.splice(userIndex, 1);
+				socket.emit('online users', io.onlineUsers);
+			}
 		});
 	});
 
