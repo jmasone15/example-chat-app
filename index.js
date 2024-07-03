@@ -18,11 +18,12 @@ const PORT = process.env.PORT || 3001;
 // - Add “{user} is typing” functionality.
 // - Show who’s online.
 // - Add private messaging.
+// - Deploy to Vercel
 
-if (false) {
+if (cluster.isPrimary) {
 	const numCPUs = availableParallelism();
 
-	for (let i = 0; i < numCPUs; i++) {
+	for (let i = 0; i < 4; i++) {
 		cluster.fork({
 			PORT: PORT + i
 		});
@@ -46,8 +47,8 @@ if (false) {
 	const app = express();
 	const server = createServer(app);
 	const io = new Server(server, {
-		connectionStateRecovery: {}
-		// adapter: createAdapter()
+		connectionStateRecovery: {},
+		adapter: createAdapter()
 	});
 
 	const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -57,10 +58,9 @@ if (false) {
 	});
 
 	io.on('connection', async (socket) => {
-		console.log('user connected');
-
 		socket.once('self', async (msg) => {
 			socket.broadcast.emit('user connected', `${msg} has joined the chat!`);
+			console.log(`${msg} connected`);
 
 			try {
 				await db.each(
@@ -74,6 +74,13 @@ if (false) {
 				console.error(e);
 				return;
 			}
+		});
+
+		socket.on('typing', (nickname) => {
+			socket.broadcast.emit('typing', nickname);
+		});
+		socket.on('done typing', (nickname) => {
+			socket.broadcast.emit('done typing', nickname);
 		});
 
 		socket.on('chat message', async (msg, clientOffset) => {

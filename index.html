@@ -111,7 +111,9 @@
 	<script>
 		// App Variables
 		let counter = 0;
+		let typing = false;
 		let nickname = localStorage.getItem('nickname');
+		let typingToastObjects = [];
 
 		// HTML Elements
 		const form = document.getElementById('form');
@@ -146,6 +148,24 @@
 				}).showToast();
 			}
 		});
+		socket.on('typing', (nickname) => {
+			let newToast = Toastify({
+				text: `${nickname} is typing...`,
+				duration: -1,
+				position: 'right',
+				gravity: 'bottom'
+			});
+			typingToastObjects.push({
+				nickname,
+				toast: newToast
+			});
+
+			newToast.showToast();
+		});
+		socket.on('done typing', (nickname) => {
+			const existingToast = typingToastObjects.filter((x) => x.nickname === nickname)[0];
+			existingToast.toast.hideToast();
+		});
 
 
 		// Event Listeners
@@ -158,6 +178,9 @@
 				populateMessage(input.value);
 				input.value = '';
 			}
+
+			typing = false
+			socket.emit('done typing', nickname);
 		});
 		toggleButton.addEventListener('click', (e) => {
 			e.preventDefault();
@@ -177,6 +200,12 @@
 				nickname = nicknameInput.value;
 				modal.setAttribute('class', 'display-none');
 				socket.emit('self', nickname);
+			}
+		});
+		input.addEventListener('keypress', (e) => {
+			if (!typing) {
+				socket.emit('typing', nickname);
+				typing = true
 			}
 		});
 
