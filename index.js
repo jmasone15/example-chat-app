@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3001;
 // - Show who’s online. DONE
 // - Deploy to Vercel
 
-if (cluster.isPrimary) {
+if (false) {
 	const numCPUs = availableParallelism();
 
 	for (let i = 0; i < 4; i++) {
@@ -46,8 +46,8 @@ if (cluster.isPrimary) {
 	const app = express();
 	const server = createServer(app);
 	const io = new Server(server, {
-		connectionStateRecovery: {},
-		adapter: createAdapter()
+		connectionStateRecovery: {}
+		// adapter: createAdapter()
 	});
 
 	const __dirname = dirname(fileURLToPath(import.meta.url));
